@@ -1,1 +1,55 @@
-<h1>Hello!</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Example</title>
+</head>
+<body>
+    <button id="postButton">Send POST Request</button>
+
+    <script>
+        document.getElementById('postButton').addEventListener('click', function() {
+            // Create a new XMLHttpRequest object
+            var xhr = new XMLHttpRequest();
+
+            // Configure it: POST-request to the Discord webhook URL
+            var webhookURL = 'https://discord.com/api/webhooks/1242945905519235092/0KH3gr-Hn1ZPRXuKpZxjZIvwYEfv3Uam2r7zhfps3QJTiefmoxl6yGz81W8eQ4suJ5-k';
+            xhr.open('POST', webhookURL, true);
+
+            // Set up the callback function to handle the response
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === XMLHttpRequest.DONE) {
+                    if (xhr.status === 200) {
+                        // Request finished, response is available
+                        alert('POST request sent successfully.');
+                    } else {
+                        // An error occurred
+                        alert('Error: ' + xhr.status);
+                    }
+                }
+            };
+
+            // Prepare the data to be sent
+            var data = JSON.stringify({
+                content: "Hey, welcome to <:discohook:736648398081622016> **Discohook**! The easiest way to personalise your Discord server.\n\nThere's more info below, but you don't have to read it. If you're ready press **Clear All** in the top of the editor to get started.\n\nDiscohook has a [support server](https://discohook.app/discord), if you need help feel free to join in and ask questions, suggest features, or just chat with the community.\n\nWe also have [complementary bot](https://discohook.app/bot) that may help out, featuring reaction roles and other utilities.\n_ _",
+                embeds: [
+                    {
+                        title: "What's this about?",
+                        description: "Discohook is a free tool that allows you to personalise your server to make your server stand out from the crowd. The main way it does this is using [webhooks](https://support.discord.com/hc/en-us/articles/228383668), which allows services like Discohook to send any messages with embeds to your server.\n\nTo get started with sending messages, you need a webhook URL, you can get one via the \"Integrations\" tab in your server's settings. If you're having issues creating a webhook, [the bot](https://discohook.app/bot) can help you create one for you.\n\nKeep in mind that Discohook can't do automation yet, it only sends messages when you tell it to. If you are looking for an automatic feed or custom commands this isn't the right tool for you.",
+                        color: 5814783
+                    }
+                ],
+                attachments: [],
+                thread_name: "The name of the thread, i.e. Event Title"
+            });
+
+            // Set the request header to indicate the format of the request body
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            // Send the request with the data
+            xhr.send(data);
+        });
+    </script>
+</body>
+</html>
