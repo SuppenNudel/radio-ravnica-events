@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Ravnica - Event posten</title>
+    <title>Discord Webhook Example</title>
     <!-- Include flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
@@ -19,7 +19,7 @@
         <label for="address">Adresse:</label>
         <textarea id="address" name="address" rows="4" cols="50" required></textarea>
         <br><br>
-        <button type="submit">Event posten</button>
+        <button type="submit">Send POST Request</button>
     </form>
 
     <!-- Include flatpickr JavaScript -->
@@ -46,7 +46,7 @@
             var xhr = new XMLHttpRequest();
 
             // Configure it: POST-request to the Discord webhook URL
-            var webhookURL = 'https://discord.com/api/webhooks/1242955724330500157/1uHP6cdQR5K1s9JjjNB6cFj_tu1pZwMG4be6Lfxswyf1qCscd7g6-a_otWRAjeNEW1uh';
+            var webhookURL = 'https://hook.eu2.make.com/qanpdukpjgdrchwam9b416944o7ncvld';
             xhr.open('POST', webhookURL, true);
 
             // Set up the callback function to handle the response
@@ -54,7 +54,7 @@
                 if (xhr.readyState === XMLHttpRequest.DONE) {
                     if (xhr.status === 200 || xhr.status === 204) {
                         // Request finished, response is available
-                        alert('POST request sent successfully.');
+                        alert(`POST request sent successfully. (${xhr.status}) ${xhr.responseText}`);
                     } else {
                         // An error occurred
                         alert('Error: ' + xhr.status + '\nMessage: ' + xhr.responseText);
@@ -64,10 +64,9 @@
 
             // Prepare the data to be sent
             var data = JSON.stringify({
-                content: "Das Event ist <t:" + timestamp + ":R>\nAdresse: [" + address + "](https://www.google.com/maps?q=" + encodeURI(address) + ")",
-                embeds: null,
-                attachments: [],
-                thread_name: eventName // Set the thread_name to the event name
+                eventName: eventName,
+                dateTime: timestamp,
+                location: address
             });
 
             // Set the request header to indicate the format of the request body
