@@ -72,22 +72,21 @@
             var address = document.getElementById('address').value;
 
             var date = new Date(dateTime);
-            var untilDateDate = new Date(endDate);
+            var endDateDate = new Date(endDate);
 
             const timeString = date.toLocaleTimeString();
 
             // Format the date as dd.MM.yyyy
             var options = { day: '2-digit', month: '2-digit', year: 'numeric' };
             const formattedStartDate = new Intl.DateTimeFormat('de-DE', options).format(date);
-            if(!untilDateDate) {
-                const formattedEndDate = new Intl.DateTimeFormat('de-DE', options).format(untilDateDate);
+
+            var formattedEndDate;
+            if(endDate) {
+                formattedEndDate = Intl.DateTimeFormat('de-DE', options).format(endDateDate);
             }
 
             // Convert the datetime to a Unix timestamp
             var timestamp = Math.floor(new Date(dateTime).getTime() / 1000);
-
-            // Create a new XMLHttpRequest object
-            var xhr = new XMLHttpRequest();
 
             const url = new URL(window.location.href);
             const debugValue = url.searchParams.get('debug');
@@ -95,11 +94,9 @@
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
             const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: '+eventUrl+'\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: '+fee+'\\n\\n' : ''}${freitext ? freitext+'\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}`;
-            
+
             const jsonBody = JSON.stringify({
                 "content": contentText,
-                "embeds": null,
-                "attachments": [],
                 "thread_name": title
             });
 
@@ -110,9 +107,15 @@
                     "Content-type": "application/json; charset=UTF-8"
                 }
             })
-            .then(response => response.json())
-            .then((data) => {
-                alert("Senden erfolgreich");
+            .then(response => {
+                response.json().then(data => {
+                    if(response.status == 200) {
+                        alert("Senden erfolgreich");
+                    } else {
+                        console.log(data);
+                        alert(`${response.status} - Message: ${data.message}`);
+                    }
+                });
             })
             .catch((error) => {
                 alert(`Error: ${error.status}\nMessage: ${error.message}`);
