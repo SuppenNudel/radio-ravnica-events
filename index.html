@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,37 @@
     <!-- Include flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
+
 <body>
     <form id="eventForm">
-        <label for="eventName">Event:</label>
+        <label for="eventName">* Event:</label>
         <input type="text" id="eventName" name="eventName" required>
         <br><br>
-        <label for="dateTime">Datum / Uhrzeit:</label>
-        <!-- Use an input with a class 'flatpickr' for the datetime picker -->
-        <input type="text" id="dateTime" name="dateTime" class="flatpickr" required>
+        <label for="storeName">* Store Name:</label>
+        <input type="text" id="storeName" name="storeName" required>
         <br><br>
-        <label for="address">Adresse:</label>
+        <label for="format">* Format(e):</label>
+        <input type="text" id="format" name="format" required>
+        <br><br>
+        <label for="city">* Stadt:</label>
+        <input type="text" id="city" name="city" required>
+        <br><br>
+        <label for="eventUrl">URL:</label>
+        <input type="text" id="eventUrl" name="eventUrl">
+        <br><br>
+        <label for="fee">Teilnahmegebühr:</label>
+        <input type="text" id="fee" name="fee">
+        <br><br>
+        <label for="dateTime">* Datum / Uhrzeit:</label>
+        <input type="text" id="dateTime" name="dateTime" class="flatpickr" required>
+        <label for="untilDate">Bis</label>
+        <input type="text" id="untilDate" name="untilDate" class="flatpickr">
+        <br><br>
+        <label for="address">* Adresse:</label>
         <textarea id="address" name="address" rows="4" cols="50" required></textarea>
+        <br><br>
+        <label for="freitext">Freitext:</label>
+        <textarea id="freitext" name="freitext" rows="4" cols="50"></textarea>
         <br><br>
         <button type="submit">Post Event</button>
     </form>
@@ -30,14 +51,37 @@
             enableTime: true, // Enable time selection
             dateFormat: "Y-m-d H:i", // Date format
         });
+        flatpickr('#untilDate', {
+            enableTime: true, // Enable time selection
+            dateFormat: "Y-m-d H:i", // Date format
+        });
 
-        document.getElementById('eventForm').addEventListener('submit', function(event) {
+        document.getElementById('eventForm').addEventListener('submit', function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
 
             // Get the form values
-            var eventName = document.getElementById('eventName').value;
+            const eventName = document.getElementById('eventName').value;
+            const storeName = document.getElementById('storeName').value;
+            const format = document.getElementById('format').value;
+            const city = document.getElementById('city').value;
+            const eventUrl = document.getElementById('eventUrl').value;
+            const freitext = document.getElementById('freitext').value.replace("\n","\\n");
+            const fee = document.getElementById('fee').value;
             var dateTime = document.getElementById('dateTime').value;
+            var endDate = document.getElementById('untilDate').value;
             var address = document.getElementById('address').value;
+
+            var date = new Date(dateTime);
+            var untilDateDate = new Date(endDate);
+
+            const timeString = date.toLocaleTimeString();
+
+            // Format the date as dd.MM.yyyy
+            var options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const formattedStartDate = new Intl.DateTimeFormat('de-DE', options).format(date);
+            if(!untilDateDate) {
+                const formattedEndDate = new Intl.DateTimeFormat('de-DE', options).format(untilDateDate);
+            }
 
             // Convert the datetime to a Unix timestamp
             var timestamp = Math.floor(new Date(dateTime).getTime() / 1000);
@@ -45,36 +89,36 @@
             // Create a new XMLHttpRequest object
             var xhr = new XMLHttpRequest();
 
-            // Configure it: POST-request to the Discord webhook URL
-            var webhookURL = 'https://hook.eu2.make.com/qanpdukpjgdrchwam9b416944o7ncvld';
-            xhr.open('POST', webhookURL, true);
+            const url = new URL(window.location.href);
+            const debugValue = url.searchParams.get('debug');
+            var webhookURL = `https://hook.eu2.make.com/qanpdukpjgdrchwam9b416944o7ncvld${debugValue ? '?debug=' + debugValue : ''}`;
 
-            // Set up the callback function to handle the response
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.DONE) {
-                    if (xhr.status === 200 || xhr.status === 204) {
-                        // Request finished, response is available
-                        alert(`POST request sent successfully. (${xhr.status}) ${xhr.responseText}`);
-                    } else {
-                        // An error occurred
-                        alert('Error: ' + xhr.status + '\nMessage: ' + xhr.responseText);
-                    }
-                }
-            };
-
-            // Prepare the data to be sent
-            var data = JSON.stringify({
-                eventName: eventName,
-                dateTime: timestamp,
-                location: address
+            const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: '+eventUrl+'\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: '+fee+'\\n\\n' : ''}${freitext ? freitext+'\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}`;
+            
+            const jsonBody = JSON.stringify({
+                "content": contentText,
+                "embeds": null,
+                "attachments": [],
+                "thread_name": title
             });
 
-            // Set the request header to indicate the format of the request body
-            xhr.setRequestHeader('Content-Type', 'application/json');
-
-            // Send the request with the data
-            xhr.send(data);
+            fetch(webhookURL, {
+                method: "POST",
+                body: jsonBody,
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8"
+                }
+            })
+            .then(response => response.json())
+            .then((data) => {
+                alert("Senden erfolgreich");
+            })
+            .catch((error) => {
+                alert(`Error: ${error.status}\nMessage: ${error.message}`);
+            });
         });
     </script>
 </body>
+
 </html>
