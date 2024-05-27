@@ -74,7 +74,7 @@
                 <button type="button" class="btn btn-primary mb-3" id="sendButton">
                     <span class="spinner-border spinner-border-sm" id="sendSpinner" aria-hidden="true"
                         style="display: none;"></span>
-                    <span role="status">Send Event</span>
+                    <span role="status" id="sendStatus">Event abschicken</span>
                 </button>
             </form>
         </div>
@@ -153,6 +153,7 @@
 
             const sendButton = document.getElementById('sendButton');
             const sendSpinner = document.getElementById('sendSpinner');
+            const sendStatus = document.getElementById('sendStatus');
 
             fetch(webhookURL, {
                 method: "POST",
@@ -178,9 +179,11 @@
                     // reenable button
                     sendButton.disabled = false;
                     sendSpinner.style.display = "none";
+                    sendStatus.textContent = "Event abschicken";
                 });
             sendButton.disabled = true;
             sendSpinner.style.display = null;
+            sendStatus.textContent = "Warte auf Rückmeldung...";
         });
     </script>
 </body>
