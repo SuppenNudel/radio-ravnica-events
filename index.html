@@ -166,7 +166,7 @@
                     response.json().then(data => {
                         console.log(data);
                         if (response.status == 200) {
-                            appendAlert('Event erfolgreich angekomment', 'success');
+                            appendAlert('Event erfolgreich angekommen', 'success');
                         } else {
                             console.log(data);
                             appendAlert(`${response.status} - Message: ${data.message}`, 'warning');
