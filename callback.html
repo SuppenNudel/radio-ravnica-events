@@ -256,6 +256,7 @@
                         authBtn.disabled = true;
                         authBtn.querySelector("span[role]").textContent = "Authenticated with Discord";
 
+                        setCookie(ACCESS_TOKEN_STR, access_token, data.expires_in - 60);
                         sendBtn.disabled = false;
                     }
                 } else {
