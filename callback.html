@@ -1,26 +1,201 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Read Query Parameter</title>
+    <title>Discord Webhook Example</title>
+    <!-- Include flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
 </head>
-<body>
-    <h1>Query Parameter Reader</h1>
-    <p id="code-display">Code: </p>
 
+<body>
+    <div class="pt-4">
+        <div class="container">
+            <h1>Radio Ravnica - Event Poster</h1>
+            <form id="eventForm" class="form-floating">
+                <div class="form-floating mb-3">
+                    <input type="text" id="eventName" name="eventName" class="form-control" required>
+                    <label for="eventName" class="form-label">* Event</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" id="storeName" name="storeName" class="form-control" required>
+                    <label for="storeName" class="form-label">* Store Name</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" id="city" name="city" class="form-control" required>
+                    <label for="city" class="form-label">* Stadt</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" id="format" name="format" class="form-control" required>
+                    <label for="format" class="form-label">* Format(e)</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input type="text" id="eventUrl" name="eventUrl" class="form-control">
+                    <label for="eventUrl" class="form-label">URL</label>
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">€</span>
+                    <div class="form-floating">
+                        <input type="text" class="form-control" id="fee" name="fee">
+                        <label for="fee">Teilnahmegebühr</label>
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-md">
+                        <div class="form-floating">
+                            <input type="text" id="dateTime" name="dateTime" class="flatpickr form-control" required>
+                            <label for="dateTime" class="form-label">* Datum / Uhrzeit</label>
+                        </div>
+                    </div>
+                    <div class="col-md">
+                        <div class="form-floating">
+                            <input type="text" id="untilDate" name="untilDate" class="flatpickr form-control">
+                            <label for="untilDate" class="form-label">Bis</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="rpw form-floating mb-3">
+                    <textarea id="address" name="address" rows="4" cols="50" class="form-control" style="height: 100px"
+                        required></textarea>
+                    <label for="address" class="form-label">* Adresse</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea id="freitext" name="freitext" rows="4" cols="50" class="form-control"
+                        style="height: 100px"></textarea>
+                    <label for="freitext" class="form-label">Freitext</label>
+                </div>
+                <a href="https://discord.com/oauth2/authorize?client_id=1244888141790449695&response_type=code&redirect_uri=https%3A%2F%2Fsuppennudel.github.io%2Fradio-ravnica-events%2Fcallback&scope=openid+email+identify">Login with Discord</a>
+                <button type="button" class="btn btn-primary mb-3" id="authButton">
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"
+                        style="display: none;"></span>
+                    <span role="status">Auth with Discord</span>
+                </button>
+                <div id="liveAlertPlaceholder"></div>
+                <button type="button" class="btn btn-primary mb-3" id="sendButton">
+                    <span class="spinner-border spinner-border-sm" id="sendSpinner" aria-hidden="true"
+                        style="display: none;"></span>
+                    <span role="status" id="sendStatus">Event abschicken</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include flatpickr JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // JavaScript to read the query parameter
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
+        const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
+        const appendAlert = (message, type) => {
+            const wrapper = document.createElement('div')
+            wrapper.innerHTML = [
+                `<div class="alert alert-${type} alert-dismissible" role="alert">`,
+                `   <div>${message}</div>`,
+                '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
+                '</div>'
+            ].join('')
+
+            alertPlaceholder.append(wrapper)
         }
 
-        // Get the 'code' parameter
-        const code = getQueryParam('code');
 
-        // Display the 'code' parameter in the HTML
-        document.getElementById('code-display').innerText += code;
+        // Initialize flatpickr for the datetime picker input
+        flatpickr('#dateTime', {
+            enableTime: true, // Enable time selection
+            dateFormat: "Y-m-d H:i", // Date format
+        });
+        flatpickr('#untilDate', {
+            enableTime: true, // Enable time selection
+            dateFormat: "Y-m-d H:i", // Date format
+        });
+
+        document.getElementById('authButton').addEventListener('ckick', function (event) {
+            
+        });
+
+        document.getElementById('sendButton').addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the form from submitting the traditional way
+
+            // Get the form values
+            const eventName = document.getElementById('eventName').value;
+            const storeName = document.getElementById('storeName').value;
+            const format = document.getElementById('format').value;
+            const city = document.getElementById('city').value;
+            const eventUrl = document.getElementById('eventUrl').value;
+            const freitext = document.getElementById('freitext').value.replace("\n", "\\n");
+            const fee = document.getElementById('fee').value;
+            var dateTime = document.getElementById('dateTime').value;
+            var endDate = document.getElementById('untilDate').value;
+            var address = document.getElementById('address').value;
+
+            var date = new Date(dateTime);
+            var endDateDate = new Date(endDate);
+
+            const timeString = date.toLocaleTimeString();
+
+            // Format the date as dd.MM.yyyy
+            var options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            const formattedStartDate = new Intl.DateTimeFormat('de-DE', options).format(date);
+
+            var formattedEndDate;
+            if (endDate) {
+                formattedEndDate = Intl.DateTimeFormat('de-DE', options).format(endDateDate);
+            }
+
+            // Convert the datetime to a Unix timestamp
+            var timestamp = Math.floor(new Date(dateTime).getTime() / 1000);
+
+            const url = new URL(window.location.href);
+            const debugValue = url.searchParams.get('debug');
+            var webhookURL = `https://hook.eu2.make.com/qanpdukpjgdrchwam9b416944o7ncvld${debugValue ? '?debug=' + debugValue : ''}`;
+
+            const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + '\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}`;
+
+            const jsonBody = JSON.stringify({
+                "content": contentText,
+                "thread_name": title,
+            });
+
+            const sendButton = document.getElementById('sendButton');
+            const sendSpinner = document.getElementById('sendSpinner');
+            const sendStatus = document.getElementById('sendStatus');
+
+            // fetch(webhookURL, {
+            //     method: "POST",
+            //     body: jsonBody,
+            //     headers: {
+            //         "Content-type": "application/json; charset=UTF-8"
+            //     }
+            // })
+            // .then(response => {
+            //     response.json().then(data => {
+            //         console.log(data);
+            //         if (response.status == 200) {
+            //             appendAlert('Event erfolgreich angekomment', 'success');
+            //         } else {
+            //             console.log(data);
+            //             appendAlert(`${response.status} - Message: ${data.message}`, 'warning');
+            //         }
+            //     });
+            // })
+            // .catch((error) => {
+            //     appendAlert(`${response.status} - Message: ${data.message}`, 'danger');
+            // }).finally((evt) => {
+            //     // reenable button
+            //     sendButton.disabled = false;
+            //     sendSpinner.style.display = "none";
+            //     sendStatus.textContent = "Event abschicken";
+            // });
+            sendButton.disabled = true;
+            sendSpinner.style.display = null;
+            sendStatus.textContent = "Warte auf Rückmeldung...";
+        });
     </script>
 </body>
+
 </html>
