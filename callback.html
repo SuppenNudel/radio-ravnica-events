@@ -18,6 +18,10 @@
     <div class="pt-4">
         <div class="container">
             <h1>Radio Ravnica - Event Poster</h1>
+            <button type="button" class="btn btn-primary mb-3" id="authButton" disabled>
+                <span class="spinner-border spinner-border-sm" aria-hidden="true" style="display: none;"></span>
+                <span role="status">Auth with Discord</span>
+            </button>
             <form id="eventForm" class="form-floating">
                 <div class="form-floating mb-3">
                     <input type="text" id="eventName" name="eventName" class="form-control" required>
@@ -70,14 +74,8 @@
                         style="height: 100px"></textarea>
                     <label for="freitext" class="form-label">Freitext</label>
                 </div>
-                <a href="https://discord.com/oauth2/authorize?client_id=1244888141790449695&response_type=code&redirect_uri=https%3A%2F%2Fsuppennudel.github.io%2Fradio-ravnica-events%2Fcallback&scope=openid+email+identify">Login with Discord</a>
-                <button type="button" class="btn btn-primary mb-3" id="authButton">
-                    <span class="spinner-border spinner-border-sm" aria-hidden="true"
-                        style="display: none;"></span>
-                    <span role="status">Auth with Discord</span>
-                </button>
                 <div id="liveAlertPlaceholder"></div>
-                <button type="button" class="btn btn-primary mb-3" id="sendButton">
+                <button type="button" class="btn btn-primary mb-3" id="sendButton" disabled>
                     <span class="spinner-border spinner-border-sm" id="sendSpinner" aria-hidden="true"
                         style="display: none;"></span>
                     <span role="status" id="sendStatus">Event abschicken</span>
@@ -88,7 +86,69 @@
 
     <!-- Include flatpickr JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
     <script>
+        flatpickr(".flatpickr", {
+            locale: "de",
+            enableTime: true
+            //     dateFormat: "Y-m-d H:i",
+        });
+
+        // JavaScript to read the query parameter
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        async function postDataAndFetchUser(webhookURL, jsonBody) {
+            try {
+                const response = await fetch(webhookURL, {
+                    method: "POST",
+                    body: jsonBody,
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.status === 200) {
+                    appendAlert('Event erfolgreich angekommen', 'success');
+                } else {
+                    appendAlert(`${response.status} - Message: ${data.message}`, 'warning');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                appendAlert('An error occurred', 'danger');
+            } finally {
+                // reenable button
+                sendBtn.disabled = false;
+                sendSpinner.style.display = "none";
+                sendStatus.textContent = "Event abschicken";
+            }
+        }
+
+        function setCookie(cookie_name, value, expiresInSeconds) {
+            var exdate = new Date();
+            exdate.setSeconds(exdate.getSeconds() + expiresInSeconds);
+            var cookie_value = escape(value) + ((expiresInSeconds == null) ? "" : "; expires=" + exdate.toUTCString());
+            document.cookie = `${cookie_name}=${cookie_value}; SameSite=Lax`;
+        }
+
+        function getCookie(cookiename) {
+            // Get name followed by anything except a semicolon
+            var cookiestring = RegExp(cookiename + "=[^;]+").exec(document.cookie);
+            // Return everything after the equal sign, or an empty string if the cookie name not found
+            return decodeURIComponent(!!cookiestring ? cookiestring.toString().replace(/^[^=]+./, "") : "");
+        }
+
+        const ACCESS_TOKEN_STR = 'access_token';
+
+        const authBtn = document.getElementById('authButton');
+        const sendBtn = document.getElementById('sendButton');
+        let access_token = getCookie(ACCESS_TOKEN_STR);
+
         const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
         const appendAlert = (message, type) => {
             const wrapper = document.createElement('div')
@@ -102,22 +162,11 @@
             alertPlaceholder.append(wrapper)
         }
 
-
-        // Initialize flatpickr for the datetime picker input
-        flatpickr('#dateTime', {
-            enableTime: true, // Enable time selection
-            dateFormat: "Y-m-d H:i", // Date format
-        });
-        flatpickr('#untilDate', {
-            enableTime: true, // Enable time selection
-            dateFormat: "Y-m-d H:i", // Date format
+        authBtn.addEventListener('click', function (event) {
+            window.open('https://discord.com/oauth2/authorize?client_id=1244888141790449695&response_type=code&redirect_uri=https%3A%2F%2Fsuppennudel.github.io%2Fradio-ravnica-events%2Fcallback&scope=identify');
         });
 
-        document.getElementById('authButton').addEventListener('ckick', function (event) {
-            
-        });
-
-        document.getElementById('sendButton').addEventListener('click', function (event) {
+        sendBtn.addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
 
             // Get the form values
@@ -153,48 +202,68 @@
             const debugValue = url.searchParams.get('debug');
             var webhookURL = `https://hook.eu2.make.com/qanpdukpjgdrchwam9b416944o7ncvld${debugValue ? '?debug=' + debugValue : ''}`;
 
+            const userResponse = await fetch('https://discord.com/api/users/@me', {
+                headers: {
+                    'Authorization': `Bearer ${access_token}`
+                }
+            });
+
+            const user = await userResponse.json();
+            console.log('User ID:', user.id);
+
+
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
-            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + '\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + '\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}\\n\\nPosted By: <@${user.id}>`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
                 "thread_name": title,
             });
 
-            const sendButton = document.getElementById('sendButton');
             const sendSpinner = document.getElementById('sendSpinner');
             const sendStatus = document.getElementById('sendStatus');
 
-            // fetch(webhookURL, {
-            //     method: "POST",
-            //     body: jsonBody,
-            //     headers: {
-            //         "Content-type": "application/json; charset=UTF-8"
-            //     }
-            // })
-            // .then(response => {
-            //     response.json().then(data => {
-            //         console.log(data);
-            //         if (response.status == 200) {
-            //             appendAlert('Event erfolgreich angekomment', 'success');
-            //         } else {
-            //             console.log(data);
-            //             appendAlert(`${response.status} - Message: ${data.message}`, 'warning');
-            //         }
-            //     });
-            // })
-            // .catch((error) => {
-            //     appendAlert(`${response.status} - Message: ${data.message}`, 'danger');
-            // }).finally((evt) => {
-            //     // reenable button
-            //     sendButton.disabled = false;
-            //     sendSpinner.style.display = "none";
-            //     sendStatus.textContent = "Event abschicken";
-            // });
-            sendButton.disabled = true;
+            postDataAndFetchUser(webhookURL, jsonBody);
+
+            sendBtn.disabled = true;
             sendSpinner.style.display = null;
             sendStatus.textContent = "Warte auf Rückmeldung...";
         });
+
+        async function init() {
+            if (access_token) {
+                authBtn.classList.toggle('btn-success');
+                authBtn.classList.toggle('btn-primary');
+                authBtn.disabled = true;
+                authBtn.querySelector("span[role]").textContent = "Authenticated with Discord";
+
+                sendBtn.disabled = false;
+            } else {
+                const authorization_code = getQueryParam('code');
+                if (authorization_code) {
+                    // request access_token
+                    response = await fetch(`https://hook.eu2.make.com/o1oh72mgkbx81hxgtq4pebjv25jq7jqa?code=${authorization_code}`)
+                    data = await response.json();
+                    access_token = data.access_token;
+                    data.expires_in; // in seconds
+                    data.token_type;
+                    data.refresh_token;
+                    data.scope;
+
+                    if (access_token) {
+                        authBtn.classList.toggle('btn-success');
+                        authBtn.classList.toggle('btn-primary');
+                        authBtn.disabled = true;
+                        authBtn.querySelector("span[role]").textContent = "Authenticated with Discord";
+
+                        sendBtn.disabled = false;
+                    }
+                } else {
+                    authBtn.disabled = false;
+                }
+            }
+        }
+        init();
     </script>
 </body>
 
