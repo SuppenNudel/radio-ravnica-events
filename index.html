@@ -82,7 +82,14 @@
 
     <!-- Include flatpickr JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
     <script>
+        flatpickr(".flatpickr", {
+            locale: "de",
+            enableTime: true
+            //     dateFormat: "Y-m-d H:i",
+        });
+        
         const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
         const appendAlert = (message, type) => {
             const wrapper = document.createElement('div')
@@ -95,18 +102,7 @@
 
             alertPlaceholder.append(wrapper)
         }
-
-
-        // Initialize flatpickr for the datetime picker input
-        flatpickr('#dateTime', {
-            enableTime: true, // Enable time selection
-            dateFormat: "Y-m-d H:i", // Date format
-        });
-        flatpickr('#untilDate', {
-            enableTime: true, // Enable time selection
-            dateFormat: "Y-m-d H:i", // Date format
-        });
-
+        
         document.getElementById('sendButton').addEventListener('click', function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
 
