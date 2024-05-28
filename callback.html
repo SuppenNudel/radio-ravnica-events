@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read Query Parameter</title>
+</head>
+<body>
+    <h1>Query Parameter Reader</h1>
+    <p id="code-display">Code: </p>
+
+    <script>
+        // JavaScript to read the query parameter
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Get the 'code' parameter
+        const code = getQueryParam('code');
+
+        // Display the 'code' parameter in the HTML
+        document.getElementById('code-display').innerText += code;
+    </script>
+</body>
+</html>
