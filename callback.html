@@ -65,9 +65,8 @@
                     </div>
                 </div>
                 <div class="rpw form-floating mb-3">
-                    <textarea id="address" name="address" rows="4" cols="50" class="form-control" style="height: 100px"
-                        required></textarea>
-                    <label for="address" class="form-label">* Adresse</label>
+                    <textarea id="address" name="address" rows="4" cols="50" class="form-control" style="height: 100px"></textarea>
+                    <label for="address" class="form-label">Adresse (falls abweichend von Store Name + Stadt)</label>
                 </div>
                 <div class="form-floating mb-3">
                     <textarea id="freitext" name="freitext" rows="4" cols="50" class="form-control"
@@ -170,16 +169,17 @@
             event.preventDefault(); // Prevent the form from submitting the traditional way
 
             // Get the form values
-            const eventName = document.getElementById('eventName').value;
-            const storeName = document.getElementById('storeName').value;
-            const format = document.getElementById('format').value;
-            const city = document.getElementById('city').value;
-            const eventUrl = document.getElementById('eventUrl').value;
+            const eventName = document.getElementById('eventName').value.strip();
+            const storeName = document.getElementById('storeName').value.strip();
+            const format = document.getElementById('format').value.strip();
+            const city = document.getElementById('city').value.strip();
+            const eventUrl = document.getElementById('eventUrl').value.strip();
             const freitext = document.getElementById('freitext').value.replace("\n", "\\n");
-            const fee = document.getElementById('fee').value;
+            const fee = document.getElementById('fee').value.strip();
             var dateTime = document.getElementById('dateTime').value;
             var endDate = document.getElementById('untilDate').value;
-            var address = document.getElementById('address').value;
+            const addressField = document.getElementById('address').value.strip();
+            const address = addressField ? addressField : storeName + " "+city;
 
             var date = new Date(dateTime);
             var endDateDate = new Date(endDate);
