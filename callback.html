@@ -46,7 +46,7 @@
                 <div class="input-group mb-3">
                     <span class="input-group-text">€</span>
                     <div class="form-floating">
-                        <input type="text" class="form-control" id="fee" name="fee">
+                        <input type="number" class="form-control" id="fee" name="fee" pattern="[0-9\.]+">
                         <label for="fee">Teilnahmegebühr</label>
                     </div>
                 </div>
@@ -65,7 +65,8 @@
                     </div>
                 </div>
                 <div class="rpw form-floating mb-3">
-                    <textarea id="address" name="address" rows="4" cols="50" class="form-control" style="height: 100px"></textarea>
+                    <textarea id="address" name="address" rows="4" cols="50" class="form-control"
+                        style="height: 100px"></textarea>
                     <label for="address" class="form-label">Adresse (falls abweichend von Store Name + Stadt)</label>
                 </div>
                 <div class="form-floating mb-3">
@@ -169,17 +170,17 @@
             event.preventDefault(); // Prevent the form from submitting the traditional way
 
             // Get the form values
-            const eventName = document.getElementById('eventName').value.strip();
-            const storeName = document.getElementById('storeName').value.strip();
-            const format = document.getElementById('format').value.strip();
-            const city = document.getElementById('city').value.strip();
-            const eventUrl = document.getElementById('eventUrl').value.strip();
+            const eventName = document.getElementById('eventName').value.trim();
+            const storeName = document.getElementById('storeName').value.trim();
+            const format = document.getElementById('format').value.trim();
+            const city = document.getElementById('city').value.trim();
+            const eventUrl = document.getElementById('eventUrl').value.trim();
             const freitext = document.getElementById('freitext').value.replace("\n", "\\n");
-            const fee = document.getElementById('fee').value.strip();
+            const fee = document.getElementById('fee').value.trim();
             var dateTime = document.getElementById('dateTime').value;
             var endDate = document.getElementById('untilDate').value;
-            const addressField = document.getElementById('address').value.strip();
-            const address = addressField ? addressField : storeName + " "+city;
+            const addressField = document.getElementById('address').value.trim();
+            const address = addressField ? addressField : storeName + " " + city;
 
             var date = new Date(dateTime);
             var endDateDate = new Date(endDate);
@@ -209,8 +210,6 @@
             });
 
             const user = await userResponse.json();
-            console.log('User ID:', user.id);
-
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
             const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + '\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}\\n\\nPosted By: <@${user.id}>`;
