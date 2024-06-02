@@ -254,7 +254,7 @@
                 const authorization_code = getQueryParam('code');
                 if (authorization_code) {
                     // request access_token
-                    response = await fetch(`https://hook.eu2.make.com/o1oh72mgkbx81hxgtq4pebjv25jq7jqa?code=${authorization_code}`)
+                    response = await fetch(`https://hook.eu2.make.com/44mqmyj51ejx3ukposabpcxmqs1syawt?code=${authorization_code}`)
                     data = await response.json();
                     access_token = data.access_token;
                     data.expires_in; // in seconds
