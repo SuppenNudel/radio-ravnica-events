@@ -29,7 +29,7 @@
                 </div>
                 <div class="form-floating mb-3">
                     <input type="text" id="storeName" name="storeName" class="form-control" required>
-                    <label for="storeName" class="form-label">* Store Name</label>
+                    <label for="storeName" class="form-label">* Name des Ladens</label>
                 </div>
                 <div class="form-floating mb-3">
                     <input type="text" id="city" name="city" class="form-control" required>
@@ -46,7 +46,8 @@
                 <div class="input-group mb-3">
                     <span class="input-group-text">€</span>
                     <div class="form-floating">
-                        <input type="number" class="form-control" id="fee" name="fee" pattern="[0-9\.]+">
+                        <input type="number" inputmode="numeric" class="form-control" id="fee" name="fee"
+                            pattern="[0-9\.]+">
                         <label for="fee">Teilnahmegebühr</label>
                     </div>
                 </div>
@@ -94,6 +95,12 @@
             //     dateFormat: "Y-m-d H:i",
         });
 
+        document.getElementById("fee").addEventListener("keypress", function (evt) {
+            if (evt.which < 48 || evt.which > 57) {
+                evt.preventDefault();
+            }
+        });
+
         // JavaScript to read the query parameter
         function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -113,7 +120,13 @@
                 const data = await response.json();
 
                 if (response.status === 200) {
-                    appendAlert('Event erfolgreich angekommen', 'success');
+                    if (debugValue) {
+                        var serverId = '1157330260447199382'
+                    } else {
+                        var serverId = '783441128119730236';
+                    }
+                    const messageUrl = `discord://discord.com/channels/${serverId}/${data.channel_id}/${data.id}`
+                    appendAlert(`Event erfolgreich angekommen <a href='${messageUrl}'>Gehe zu Forum Post</a>`, 'success');
                 } else {
                     appendAlert(`${response.status} - Message: ${data.message}`, 'warning');
                 }
@@ -142,6 +155,18 @@
             // Return everything after the equal sign, or an empty string if the cookie name not found
             return decodeURIComponent(!!cookiestring ? cookiestring.toString().replace(/^[^=]+./, "") : "");
         }
+
+        function initForm() {
+            for (const fieldName of ['eventName', 'storeName', 'format', 'city', 'eventUrl', 'freitext', 'fee', 'dateTime', 'untilDate', 'address']) {
+                document.getElementById(fieldName).value = url.searchParams.get(fieldName);
+            }
+        }
+
+        const url = new URL(window.location.href);
+        const debugValue = url.searchParams.get('debug');
+
+        initForm();
+        // what tags are available? "applied_tags": [""]
 
         const ACCESS_TOKEN_STR = 'access_token';
 
@@ -199,24 +224,19 @@
             // Convert the datetime to a Unix timestamp
             var timestamp = Math.floor(new Date(dateTime).getTime() / 1000);
 
-            const url = new URL(window.location.href);
-            const debugValue = url.searchParams.get('debug');
-            var webhookURL = `https://hook.eu2.make.com/qanpdukpjgdrchwam9b416944o7ncvld${debugValue ? '?debug=' + debugValue : ''}`;
-
-            const userResponse = await fetch('https://discord.com/api/users/@me', {
-                headers: {
-                    'Authorization': `Bearer ${access_token}`
-                }
-            });
-
-            const user = await userResponse.json();
+            if (debugValue) {
+                var webhookURL = 'https://hook.eu2.make.com/fdu4mkm2pl3jy8bwoo5hqa7hdvf1n24z'
+            } else {
+                var webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
+            }
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
-            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + '\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}https://www.google.com/maps?q=${encodeURI(address)}\\n\\nPosted By: <@${user.id}>`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${address}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
                 "thread_name": title,
+                "access_token": access_token,
             });
 
             const sendSpinner = document.getElementById('sendSpinner');
@@ -230,14 +250,7 @@
         });
 
         async function init() {
-            if (access_token) {
-                authBtn.classList.toggle('btn-success');
-                authBtn.classList.toggle('btn-primary');
-                authBtn.disabled = true;
-                authBtn.querySelector("span[role]").textContent = "Authenticated with Discord";
-
-                sendBtn.disabled = false;
-            } else {
+            if (!access_token) {
                 const authorization_code = getQueryParam('code');
                 if (authorization_code) {
                     // request access_token
@@ -250,17 +263,22 @@
                     data.scope;
 
                     if (access_token) {
-                        authBtn.classList.toggle('btn-success');
-                        authBtn.classList.toggle('btn-primary');
-                        authBtn.disabled = true;
-                        authBtn.querySelector("span[role]").textContent = "Authenticated with Discord";
-
                         setCookie(ACCESS_TOKEN_STR, access_token, data.expires_in - 60);
                         sendBtn.disabled = false;
+                    } else {
+                        alert("Fehler beim Tokenaustausch!");
                     }
                 } else {
                     authBtn.disabled = false;
                 }
+            }
+            if (access_token) {
+                authBtn.classList.toggle('btn-success');
+                authBtn.classList.toggle('btn-primary');
+                authBtn.disabled = true;
+                authBtn.querySelector("span[role]").textContent = `Authentifiziert mit Discord`;
+
+                sendBtn.disabled = false;
             }
         }
         init();
