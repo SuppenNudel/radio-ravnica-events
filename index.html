@@ -13,13 +13,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+    <style>
+        .custom-tooltip {
+            /* --bs-tooltip-bg: var(--bd-violet-bg);
+            --bs-tooltip-color: var(--bs-white); */
+            --bs-tooltip-opacity: 1.0;
+        }
+    </style>
 </head>
 
 <body>
     <div class="pt-4">
         <div class="container" disabled>
             <h1>Radio Ravnica - Event Poster</h1>
-            <button type="button" class="btn btn-primary mb-3" id="authButton" disabled>
+            <button type="button" class="btn btn-primary mb-3" id="authButton" data-bs-toggle="tooltip"
+                data-bs-placement="top" data-bs-custom-class="custom-tooltip"
+                data-bs-title="Dies dient dazu festzustellen, wer das Event gepostet hat." disabled>
                 <span class="spinner-border spinner-border-sm" aria-hidden="true" style="display: none;"></span>
                 <span role="status">Authentifiziere dich über Discord</span>
             </button>
@@ -80,6 +89,14 @@
                         style="height: 100px"></textarea>
                     <label for="freitext" class="form-label">Freitext</label>
                 </div>
+                <div class="form-floating mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" disabled>
+                        <label class="form-check-label" for="flexCheckDefault">
+                            Eingabefelder behalten (noch nicht implementiert)
+                        </label>
+                    </div>
+                </div>
                 <div id="liveAlertPlaceholder"></div>
                 <button type="button" class="btn btn-primary mb-3" id="sendButton" disabled>
                     <span class="spinner-border spinner-border-sm" id="sendSpinner" aria-hidden="true"
@@ -94,11 +111,14 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
     <script>
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
         const ACCESS_TOKEN_STR = 'access_token';
 
         const url = new URL(window.location.href);
         const debugValue = url.searchParams.get('debug') == null || url.searchParams.get('debug') != 'true' ? false : true;
-        
+
         document.querySelectorAll('.form-control').forEach(el => {
             el.disabled = true;
         });
@@ -268,7 +288,7 @@
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
-            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField ? address : addressField}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
@@ -326,7 +346,7 @@
                 authBtn.querySelector("span[role]").textContent = `Authentifiziert über Discord als '${userdata.username}'`;
 
                 sendBtn.disabled = false;
-                
+
                 document.querySelectorAll('.form-control').forEach(el => {
                     el.disabled = false;
                 });
