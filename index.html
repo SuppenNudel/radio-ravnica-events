@@ -213,7 +213,6 @@
             var cookie_value = escape(value) + ((expiresInSeconds == null) ? "" : "; expires=" + exdate.toUTCString());
             document.cookie = `${cookie_name}=${cookie_value}; SameSite=Lax`;
         }
-        setCookie(ACCESS_TOKEN_STR, '', 0);
 
         function getCookie(cookiename) {
             // Get name followed by anything except a semicolon
