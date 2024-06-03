@@ -16,11 +16,11 @@
 
 <body>
     <div class="pt-4">
-        <div class="container">
+        <div class="container" disabled>
             <h1>Radio Ravnica - Event Poster</h1>
             <button type="button" class="btn btn-primary mb-3" id="authButton" disabled>
                 <span class="spinner-border spinner-border-sm" aria-hidden="true" style="display: none;"></span>
-                <span role="status">Auth with Discord</span>
+                <span role="status">Authentifiziere dich über Discord</span>
             </button>
             <form id="eventForm" class="form-floating">
                 <div class="form-floating mb-3">
@@ -36,7 +36,7 @@
                     <label for="city" class="form-label">* Stadt</label>
                 </div>
                 <div class='form-floating mb-3'>
-                    <select class="form-select" id="forumTagsSelect"></select>
+                    <select class="form-select form-control" id="forumTagsSelect"></select>
                     <label for="forumTagsSelect" class="form-label">* Bundesland</label>
                 </div>
                 <div class="form-floating mb-3">
@@ -95,6 +95,10 @@
     <script>
         const url = new URL(window.location.href);
         const debugValue = url.searchParams.get('debug') == null || url.searchParams.get('debug') != 'true' ? false : true;
+        
+        document.querySelectorAll('.form-control').forEach(el => {
+            el.disabled = true;
+        });
 
         flatpickr(".flatpickr", {
             locale: "de",
@@ -318,9 +322,13 @@
                 authBtn.classList.toggle('btn-success');
                 authBtn.classList.toggle('btn-primary');
                 authBtn.disabled = true;
-                authBtn.querySelector("span[role]").textContent = `Authentifiziert mit Discord als '${userdata.username}'`;
+                authBtn.querySelector("span[role]").textContent = `Authentifiziert über Discord als '${userdata.username}'`;
 
                 sendBtn.disabled = false;
+                
+                document.querySelectorAll('.form-control').forEach(el => {
+                    el.disabled = false;
+                });
             }
         }
         init();
