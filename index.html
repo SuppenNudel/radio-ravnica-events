@@ -111,7 +111,6 @@
         const forumTags = {
             '1247246029703872564': 'Baden-Württemberg Test',
             '1247252729064194219': 'Rheinland-Pfalz Test',
-            '1247272806568427623': 'NRW Test',
 
             "1207651780989689876": "Ba-Wü",
             "1207651799096361000": "Bayern",
@@ -129,7 +128,8 @@
             "1207652522903207936": "Sa-Anhalt",
             "1207652543195254824": "Schleswig-H",
             "1207652557392977920": "Thüringen",
-            "1212131432726794343": "NL"
+            "1212131432726794343": "NL",
+            "1239865137867919371": "n/a"
         }
         const selectElement = document.getElementById('forumTagsSelect');
 
@@ -235,13 +235,13 @@
             const format = document.getElementById('format').value.trim();
             const city = document.getElementById('city').value.trim();
             const eventUrl = document.getElementById('eventUrl').value.trim();
-            const freitext = document.getElementById('freitext').value.replace("\n", "\\n");
+            const freitext = document.getElementById('freitext').value.replaceAll("\n", "\\n");
             const fee = document.getElementById('fee').value.trim();
             var dateTime = document.getElementById('dateTime').value;
             var endDate = document.getElementById('untilDate').value;
-            const addressField = document.getElementById('address').value.trim();
+            const addressField = document.getElementById('address').value.replaceAll("\n", "\\n").trim();
             const tagId = document.getElementById('forumTagsSelect').value.trim();
-            const address = addressField ? addressField : storeName + " " + city;
+            const address = addressField ? addressField.replaceAll('\\n', ' ') : storeName + " " + city;
 
             var date = new Date(dateTime);
             var endDateDate = new Date(endDate);
@@ -262,7 +262,7 @@
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
-            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${address}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
