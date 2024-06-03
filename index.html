@@ -273,10 +273,20 @@
                 }
             }
             if (access_token) {
+                const options = {
+                    method: 'GET', // or 'POST', 'PUT', 'DELETE', etc.
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${access_token}`,
+                    }
+                };
+                const userResponse = await fetch('https://discord.com/api/users/@me', options)
+                const userdata = await userResponse.json();
+
                 authBtn.classList.toggle('btn-success');
                 authBtn.classList.toggle('btn-primary');
                 authBtn.disabled = true;
-                authBtn.querySelector("span[role]").textContent = `Authentifiziert mit Discord`;
+                authBtn.querySelector("span[role]").textContent = `Authentifiziert mit Discord als '${userdata.username}'`;
 
                 sendBtn.disabled = false;
             }
