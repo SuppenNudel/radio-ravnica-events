@@ -51,7 +51,7 @@
                     <span class="input-group-text">€</span>
                     <div class="form-floating">
                         <input type="number" inputmode="numeric" class="form-control" id="fee" name="fee"
-                            pattern="[0-9\.]+">
+                            pattern="[0-9\.,]+">
                         <label for="fee">Teilnahmegebühr</label>
                     </div>
                 </div>
@@ -93,6 +93,8 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
     <script>
+        const ACCESS_TOKEN_STR = 'access_token';
+
         const url = new URL(window.location.href);
         const debugValue = url.searchParams.get('debug') == null || url.searchParams.get('debug') != 'true' ? false : true;
         
@@ -190,6 +192,7 @@
             var cookie_value = escape(value) + ((expiresInSeconds == null) ? "" : "; expires=" + exdate.toUTCString());
             document.cookie = `${cookie_name}=${cookie_value}; SameSite=Lax`;
         }
+        setCookie(ACCESS_TOKEN_STR, '', 0);
 
         function getCookie(cookiename) {
             // Get name followed by anything except a semicolon
@@ -206,8 +209,6 @@
 
         initForm();
         // what tags are available? "applied_tags": [""]
-
-        const ACCESS_TOKEN_STR = 'access_token';
 
         const authBtn = document.getElementById('authButton');
         const sendBtn = document.getElementById('sendButton');
@@ -300,7 +301,6 @@
 
                     if (access_token) {
                         setCookie(ACCESS_TOKEN_STR, access_token, data.expires_in - 60);
-                        sendBtn.disabled = false;
                     } else {
                         alert("Fehler beim Tokenaustausch!");
                     }
