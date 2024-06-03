@@ -35,6 +35,10 @@
                     <input type="text" id="city" name="city" class="form-control" required>
                     <label for="city" class="form-label">* Stadt</label>
                 </div>
+                <div class='form-floating mb-3'>
+                    <select class="form-select" id="forumTagsSelect"></select>
+                    <label for="forumTagsSelect" class="form-label">* Bundesland</label>
+                </div>
                 <div class="form-floating mb-3">
                     <input type="text" id="format" name="format" class="form-control" required>
                     <label for="format" class="form-label">* Format(e)</label>
@@ -89,6 +93,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
     <script>
+        const url = new URL(window.location.href);
+        const debugValue = url.searchParams.get('debug') == null || url.searchParams.get('debug') != 'true' ? false : true;
+
         flatpickr(".flatpickr", {
             locale: "de",
             enableTime: true
@@ -100,6 +107,41 @@
                 evt.preventDefault();
             }
         });
+
+        const forumTags = {
+            '1247246029703872564': 'Baden-Württemberg Test',
+            '1247252729064194219': 'Rheinland-Pfalz Test',
+
+            "1207651780989689876": "Ba-Wü",
+            "1207651799096361000": "Bayern",
+            "1207651878465306744": "Berlin",
+            "1207651927266168842": "Brandenburg",
+            "1207651950619926538": "Bremen",
+            "1207651987726925874": "Hamburg",
+            "1207652005489938462": "Hessen",
+            "1207652028038385664": "Meck-Pomm",
+            "1207652430154571827": "Niedersachsen",
+            "1207652448089411595": "NRW",
+            "1207652463809662987": "R-P",
+            "1207652479404351559": "Saarland",
+            "1207652499637411841": "Sachsen",
+            "1207652522903207936": "Sa-Anhalt",
+            "1207652543195254824": "Schleswig-H",
+            "1207652557392977920": "Thüringen",
+            "1212131432726794343": "NL",
+            "1239865137867919371": "n/a"
+        }
+        const selectElement = document.getElementById('forumTagsSelect');
+
+        for (const [key, value] of Object.entries(forumTags)) {
+            if (debugValue != value.includes('Test')) {
+                continue
+            }
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = value;
+            selectElement.appendChild(option);
+        }
 
         // JavaScript to read the query parameter
         function getQueryParam(param) {
@@ -120,11 +162,7 @@
                 const data = await response.json();
 
                 if (response.status === 200) {
-                    if (debugValue) {
-                        var serverId = '1157330260447199382'
-                    } else {
-                        var serverId = '783441128119730236';
-                    }
+                    const serverId = '783441128119730236';
                     const messageUrl = `discord://discord.com/channels/${serverId}/${data.channel_id}/${data.id}`
                     appendAlert(`Event erfolgreich angekommen <a href='${messageUrl}'>Gehe zu Forum Post</a>`, 'success');
                 } else {
@@ -161,9 +199,6 @@
                 document.getElementById(fieldName).value = url.searchParams.get(fieldName);
             }
         }
-
-        const url = new URL(window.location.href);
-        const debugValue = url.searchParams.get('debug');
 
         initForm();
         // what tags are available? "applied_tags": [""]
@@ -205,6 +240,7 @@
             var dateTime = document.getElementById('dateTime').value;
             var endDate = document.getElementById('untilDate').value;
             const addressField = document.getElementById('address').value.trim();
+            const tagId = document.getElementById('forumTagsSelect').value.trim();
             const address = addressField ? addressField : storeName + " " + city;
 
             var date = new Date(dateTime);
@@ -223,12 +259,7 @@
 
             // Convert the datetime to a Unix timestamp
             var timestamp = Math.floor(new Date(dateTime).getTime() / 1000);
-
-            if (debugValue) {
-                var webhookURL = 'https://hook.eu2.make.com/fdu4mkm2pl3jy8bwoo5hqa7hdvf1n24z'
-            } else {
-                var webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
-            }
+            const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
             const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${address}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
@@ -237,6 +268,7 @@
                 "content": contentText,
                 "thread_name": title,
                 "access_token": access_token,
+                "tagId": tagId
             });
 
             const sendSpinner = document.getElementById('sendSpinner');
