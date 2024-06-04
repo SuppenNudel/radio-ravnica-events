@@ -284,7 +284,7 @@
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
-            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField ? address : addressField}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField ? addressField : address}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
@@ -336,9 +336,7 @@
             fetch(`https://discord.com/api/users/@me/guilds/${RR_SERVER_ID}/member`, options)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data);
                     if(data.nick) {
-                        // if(data.)
                         authButton.classList.toggle('btn-success');
                         authButton.classList.toggle('btn-primary');
                         authButton.disabled = true;
