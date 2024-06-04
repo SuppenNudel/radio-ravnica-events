@@ -33,7 +33,7 @@
                     style="display: none;"></span>
                 <span role="status" id="authStatus">Authentifiziere dich über Discord</span>
             </button>
-            <form id="eventForm" class="form-floating">
+            <form id="eventForm" class="form-floating" >
                 <div class="form-floating mb-3">
                     <input type="text" id="eventName" name="eventName" class="form-control" required>
                     <label for="eventName" class="form-label">* Event</label>
@@ -95,7 +95,7 @@
                     </div>
                 </div>
                 <div id="liveAlertPlaceholder"></div>
-                <button type="button" class="btn btn-primary mb-3" id="sendButton" disabled>
+                <button type="submit" class="btn btn-primary mb-3" id="sendButton" disabled>
                     <span class="spinner-border spinner-border-sm" id="sendSpinner" aria-hidden="true"
                         style="display: none;"></span>
                     <span role="status" id="sendStatus">Event abschicken</span>
@@ -208,8 +208,23 @@
             window.location = 'https://discord.com/oauth2/authorize?response_type=token&client_id=1244888141790449695&scope=guilds.members.read';
         });
 
+        function isFormValid() {
+            const formElements = eventForm.querySelectorAll('.form-control')
+            for(const formElement of formElements) {
+                const isRequired = formElement.required;
+                if(isRequired && formElement.value.trim() == "") {
+                    return false;
+                }
+            }
+            return true;
+        }
+        isFormValid();
+
         sendButton.addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
+            if(!isFormValid()) {
+                return;
+            }
             alertPlaceholder.innerHTML = "";
 
             // Get the form values
@@ -244,19 +259,21 @@
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
 
             const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${format} - ${eventName} @ ${storeName} in ${city}`;
-            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField ? addressField : storeName+'\\n'+city}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
+            const contentText = `Format(e): ${format}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${timeString}\\n${eventUrl ? 'URL: ' + eventUrl + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${fee ? 'Startgebühr: ' + fee + ' €\\n\\n' : ''}${freitext ? freitext + '\\n\\n' : ''}[${addressField ? addressField : storeName + '\\n' + city}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
                 "thread_name": title,
                 "access_token": access_token,
-                "address": address
+                "address": address,
+                "debug": debugValue ? "test" : ""
             });
 
             const sendSpinner = document.getElementById('sendSpinner');
             const sendStatus = document.getElementById('sendStatus');
 
-            postDataAndFetchUser(webhookURL, jsonBody);
+            // postDataAndFetchUser(webhookURL, jsonBody);
+            console.log("would post");
 
             sendButton.disabled = true;
             sendSpinner.style.display = null;
@@ -294,18 +311,20 @@
             const RR_SERVER_ID = "783441128119730236";
 
             fetch(`https://discord.com/api/users/@me/guilds/${RR_SERVER_ID}/member`, options)
-                .then(response => response.json())
-                .then(data => {
-                    if(data.nick) {
+                .then(async response => {
+                    console.log(response);
+                    data = await response.json();
+                    console.log(data);
+                    if (data.nick) {
                         authButton.classList.toggle('btn-success');
                         authButton.classList.toggle('btn-primary');
                         authButton.disabled = true;
                         authStatus.textContent = `Authentifiziert über Discord als '${data.nick}'`;
-                        
+
                         sendButton.disabled = false;
-                        
+
                         authSpinner.style.display = "none";
-                        
+
                         document.querySelectorAll('.form-control').forEach(el => {
                             el.disabled = false;
                         });
@@ -320,7 +339,10 @@
                         authButton.after(rr_join);
                     }
                 }).catch(data => {
-                    console.error(data);
+                    if (data.code == 429) {
+                        console.error("rate limited");
+                    }
+                    console.error("an error occured", data);
                 });
         } else {
             authButton.disabled = false;
