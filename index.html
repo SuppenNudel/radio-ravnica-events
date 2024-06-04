@@ -240,7 +240,6 @@
                 '   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>',
                 '</div>'
             ].join('')
-
             alertPlaceholder.append(wrapper)
         }
 
@@ -250,6 +249,7 @@
 
         sendButton.addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
+            alertPlaceholder.innerHTML = "";
 
             // Get the form values
             const eventName = document.getElementById('eventName').value.trim();
