@@ -29,8 +29,9 @@
             <button type="button" class="btn btn-primary mb-3" id="authButton" data-bs-toggle="tooltip"
                 data-bs-placement="top" data-bs-custom-class="custom-tooltip"
                 data-bs-title="Dies dient dazu festzustellen, wer das Event gepostet hat." disabled>
-                <span class="spinner-border spinner-border-sm" aria-hidden="true" style="display: none;"></span>
-                <span role="status">Authentifiziere dich über Discord</span>
+                <span class="spinner-border spinner-border-sm" aria-hidden="true" id="authSpinner"
+                    style="display: none;"></span>
+                <span role="status" id="authStatus">Authentifiziere dich über Discord</span>
             </button>
             <form id="eventForm" class="form-floating">
                 <div class="form-floating mb-3">
@@ -201,7 +202,7 @@
                 appendAlert('An error occurred', 'danger');
             } finally {
                 // reenable button
-                sendBtn.disabled = false;
+                sendButton.disabled = false;
                 sendSpinner.style.display = "none";
                 sendStatus.textContent = "Event abschicken";
             }
@@ -230,10 +231,6 @@
         initForm();
         // what tags are available? "applied_tags": [""]
 
-        const authBtn = document.getElementById('authButton');
-        const sendBtn = document.getElementById('sendButton');
-        let access_token = getCookie(ACCESS_TOKEN_STR);
-
         const alertPlaceholder = document.getElementById('liveAlertPlaceholder');
         const appendAlert = (message, type) => {
             const wrapper = document.createElement('div')
@@ -247,11 +244,11 @@
             alertPlaceholder.append(wrapper)
         }
 
-        authBtn.addEventListener('click', function (event) {
-            window.location = 'https://discord.com/oauth2/authorize?client_id=1244888141790449695&response_type=code&redirect_uri=https%3A%2F%2Fsuppennudel.github.io%2Fradio-ravnica-events&scope=identify';
+        authButton.addEventListener('click', function (event) {
+            window.location = 'https://discord.com/oauth2/authorize?response_type=token&client_id=1244888141790449695&scope=guilds.members.read';
         });
 
-        sendBtn.addEventListener('click', async function (event) {
+        sendButton.addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
 
             // Get the form values
@@ -301,57 +298,75 @@
 
             postDataAndFetchUser(webhookURL, jsonBody);
 
-            sendBtn.disabled = true;
+            sendButton.disabled = true;
             sendSpinner.style.display = null;
             sendStatus.textContent = "Warte auf Rückmeldung...";
         });
 
-        async function init() {
-            if (!access_token) {
-                const authorization_code = getQueryParam('code');
-                if (authorization_code) {
-                    // request access_token
-                    response = await fetch(`https://hook.eu2.make.com/44mqmyj51ejx3ukposabpcxmqs1syawt?code=${authorization_code}`)
-                    data = await response.json();
-                    access_token = data.access_token;
-                    data.expires_in; // in seconds
-                    data.token_type;
-                    data.refresh_token;
-                    data.scope;
+        const parsedHash = new URLSearchParams(
+            window.location.hash.substring(1) // any_hash_key=any_value
+        );
 
-                    if (access_token) {
-                        setCookie(ACCESS_TOKEN_STR, access_token, data.expires_in - 60);
-                    } else {
-                        alert("Fehler beim Tokenaustausch!");
-                    }
-                } else {
-                    authBtn.disabled = false;
-                }
-            }
+        let access_token = getCookie(ACCESS_TOKEN_STR);
+
+        if (!access_token) {
+            access_token = parsedHash.get("access_token");
+            expires_in = parsedHash.get("expires_in");
+
+            console.log(parsedHash.get("token_type"));
+            console.log(parsedHash.get("scope"));
+            console.log(parsedHash.get("state"));
+
             if (access_token) {
-                const options = {
-                    method: 'GET', // or 'POST', 'PUT', 'DELETE', etc.
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${access_token}`,
-                    }
-                };
-                const userResponse = await fetch('https://discord.com/api/users/@me', options)
-                const userdata = await userResponse.json();
-
-                authBtn.classList.toggle('btn-success');
-                authBtn.classList.toggle('btn-primary');
-                authBtn.disabled = true;
-                authBtn.querySelector("span[role]").textContent = `Authentifiziert über Discord als '${userdata.username}'`;
-
-                sendBtn.disabled = false;
-
-                document.querySelectorAll('.form-control').forEach(el => {
-                    el.disabled = false;
-                });
+                setCookie(ACCESS_TOKEN_STR, access_token, expires_in - 60);
             }
         }
-        init();
+        if (access_token) {
+            const options = {
+                method: 'GET', // or 'POST', 'PUT', 'DELETE', etc.
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`,
+                }
+            };
+            authSpinner.style.display = null;
+            authStatus.textContent = "Authentifizierung erfolgt";
+            const RR_SERVER_ID = "783441128119730236";
+
+            fetch(`https://discord.com/api/users/@me/guilds/${RR_SERVER_ID}/member`, options)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    if(data.nick) {
+                        // if(data.)
+                        authButton.classList.toggle('btn-success');
+                        authButton.classList.toggle('btn-primary');
+                        authButton.disabled = true;
+                        authStatus.textContent = `Authentifiziert über Discord als '${data.nick}'`;
+                        
+                        sendButton.disabled = false;
+                        
+                        authSpinner.style.display = "none";
+                        
+                        document.querySelectorAll('.form-control').forEach(el => {
+                            el.disabled = false;
+                        });
+                    } else {
+                        authButton.classList.toggle('btn-danger');
+                        authButton.classList.toggle('btn-primary');
+                        authSpinner.style.display = "none";
+                        authStatus.textContent = 'Du bist nicht Teil des "Radio Ravnica" Discords';
+                        rr_join = document.createElement('a');
+                        rr_join.href = 'https://discord.gg/YN3ZEVXzwr'
+                        rr_join.textContent = 'Klicke hier zum Beitreten';
+                        authButton.after(rr_join);
+                    }
+                }).catch(data => {
+                    console.error(data);
+                });
+        } else {
+            authButton.disabled = false;
+        }
     </script>
 </body>
 
