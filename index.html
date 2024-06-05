@@ -33,6 +33,39 @@
                     style="display: none;"></span>
                 <span role="status" id="authStatus">Authentifiziere dich über Discord</span>
             </button>
+            <button type="button" class="btn btn-info mb-3" id="endUseInfo" data-bs-toggle="modal"
+                data-bs-target="#endUseModal">Datenschutz & Verwendungszweck</button>
+            <!-- Modal -->
+            <div class="modal fade" id="endUseModal" tabindex="-1" aria-labelledby="endUseModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="endUseModalLabel">Datenschutz & Verwendungszweck</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Wir nutzen die Authentifizierung via Discord im OAuth-Verfahren um zu verhindern, dass
+                            Serverfremde beliebig Events auf dem Server anlegen können, und um in den angelegten Events
+                            festzuhalten von wem das jeweilige Event eingetragen wurde (als Ansprechpartner für
+                            Rückfragen, und als Shoutout für das Beleben der Communities).
+                            <br><br>
+                            Wir nutzen daher ausschließlich den User-Namen, sowie die Informationen welchen Servern ihr
+                            beigetreten seid. Letzteres nutzen wir nur um festzustellen, ob ihr dem Radio Ravnica-Server
+                            beigetreten seid. Wir speichern diese Informationen nicht ab, verwenden sie zu <b>keinen</b>
+                            anderen Zwecken, werten sie <b>nicht</b> aus, und geben sie <b>nicht</b> an Dritte weiter!
+                            <br><br>
+                            Vor allem erhalten wir keinen Zugriff auf eure Zugangsdaten oder gar euer Passwort! Die
+                            Anmeldung läuft nur gegen Discord selbst. Wir erhalten lediglich die Bestätigung über die
+                            erfolgreiche Anmeldung einschließlich der oben genannten Informationen.
+                            Technische Details zum OAuth-Verfahren finden sich hier: <a href="https://discord.com/developers/docs/topics/oauth2">OAuth2</a>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <form id="eventForm" class="form-floating">
                 <div class="form-floating mb-3">
                     <input type="text" id="event" name="event" class="form-control" required>
@@ -261,19 +294,24 @@
             const freitextValue = document.getElementById('freitext').value.replaceAll("\n", "\\n");
             const feeValue = document.getElementById('fee').value.trim();
             const startDate = fp_date.selectedDates[0];
-            const endDate = fp_date.selectedDates[1];
+            const endDate = fp_date.selectedDates[1]; // == startDate ? null : fp_date.selectedDates[1];
             const timeValue = fp_time.selectedDates[0];
             const addressFieldValue = document.getElementById('address').value.replaceAll("\n", "\\n").trim();
             const address = addressFieldValue ? addressFieldValue.replaceAll('\\n', ' ') : storeValue + " " + cityValue;
 
-            var startDateFormat = 'd.';
-            if(endDate) {
-                if(endDate.getMonth() != startDate.getMonth()) {
+            var startDateFormat = '';
+            if (endDate && startDate.getDate() != endDate.getDate()) {
+                if (endDate.getDay() != startDate.getDay()) {
+                    startDate += 'd.';
+                }
+                if (endDate.getMonth() != startDate.getMonth()) {
                     startDateFormat += 'm.';
                 }
-                if(endDate.getYear() != startDate.getYear()) {
+                if (endDate.getYear() != startDate.getYear()) {
                     startDateFormat += 'y';
                 }
+            } else {
+                startDateFormat = 'd.m.y';
             }
             const formattedStartDate = fp_date.formatDate(startDate, startDateFormat);
             const formattedEndDate = fp_date.formatDate(endDate, "d.m.y");
@@ -287,9 +325,9 @@
             const timestamp = Math.floor(combinedDateTime.getTime() / 1000);
 
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
-
-            const title = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''} - ${formatValue} - ${eventValue} @ ${storeValue} in ${cityValue}`;
-            const contentText = `Format(e): ${formatValue}\\nDatum: ${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}\\nUhrzeit: ${formattedTime}\\n${urlValue ? 'URL: ' + urlValue + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue + '\\n\\n' : ''}[${addressFieldValue ? addressFieldValue : storeValue + '\\n' + cityValue}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
+            const formattedDateRange = `${formattedStartDate}${startDate.getDate() != endDate.getDate() ? ' bis ' + formattedEndDate : ''}`;
+            const title = `${formattedDateRange} - ${formatValue} - ${eventValue} @ ${storeValue} in ${cityValue}`;
+            const contentText = `Format(e): ${formatValue}\\nDatum: ${formattedDateRange}\\nUhrzeit: ${formattedTime}\\n${urlValue ? 'URL: ' + urlValue + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue + '\\n\\n' : ''}[${addressFieldValue ? addressFieldValue : storeValue + '\\n' + cityValue}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
