@@ -26,13 +26,12 @@
     <div class="pt-4">
         <div class="container" disabled>
             <h1>Radio Ravnica - Event Poster</h1>
-            <button type="button" class="btn btn-primary mb-3" id="authButton" data-bs-toggle="tooltip"
-                data-bs-placement="top" data-bs-custom-class="custom-tooltip"
-                data-bs-title="Dies dient dazu festzustellen, wer das Event gepostet hat." disabled>
+            <button type="button" class="btn btn-primary mb-3" id="authButton" disabled>
                 <span class="spinner-border spinner-border-sm" aria-hidden="true" id="authSpinner"
                     style="display: none;"></span>
                 <span role="status" id="authStatus">Authentifiziere dich über Discord</span>
             </button>
+            <button type="button" class="btn btn-danger mb-3" id="revokeAuthButton" hidden>Verbindung aufheben</button>
             <button type="button" class="btn btn-info mb-3" id="endUseInfo" data-bs-toggle="modal"
                 data-bs-target="#endUseModal">Datenschutz & Verwendungszweck</button>
             <!-- Modal -->
@@ -269,6 +268,13 @@
             window.location = 'https://discord.com/oauth2/authorize?response_type=token&client_id=1244888141790449695&scope=guilds.members.read';
         });
 
+        revokeAuthButton.addEventListener('click', function (event) {
+            setCookie(ACCESS_TOKEN_STR, '', 0);
+            location.hash = '';
+            history.replaceState(null, document.title, location.pathname + location.search);
+            location.replace(location.href);
+        });
+
         function isFormValid() {
             const formElements = eventForm.querySelectorAll('.form-control')
             for (const formElement of formElements) {
@@ -394,6 +400,7 @@
                         authButton.classList.toggle('btn-primary');
                         authButton.disabled = true;
                         authStatus.textContent = `Authentifiziert über Discord als '${data.nick}'`;
+                        revokeAuthButton.hidden = false;
 
                         sendButton.disabled = false;
 
