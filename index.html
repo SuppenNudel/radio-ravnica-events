@@ -384,13 +384,11 @@
 
             fetch(`https://discord.com/api/users/@me/guilds/${RR_SERVER_ID}/member`, options)
                 .then(async response => {
-                    console.log(response);
                     data = await response.json();
                     if (response.status == 429) {
                         alert(`${data.message} Retry after: ${data.retry_after} seconds`);
                         return;
                     }
-                    console.log(data);
                     if (data.nick) {
                         authButton.classList.toggle('btn-success');
                         authButton.classList.toggle('btn-primary');
