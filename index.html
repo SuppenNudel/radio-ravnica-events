@@ -211,7 +211,7 @@
                 } else {
                     var message = data.message;
                     if(response.status == 404 && data.status == 'ZERO_RESULTS') {
-                       message =  'Ort konnte nicht gefunden werden`'
+                       message =  'Ort konnte nicht gefunden werden';
                     } else if(response.status == 429) {
                         message = `${data.message} Versuche es in ${data.retry_after} Sekunden nochmal.`;
                     }
