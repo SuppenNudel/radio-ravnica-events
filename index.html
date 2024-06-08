@@ -412,6 +412,7 @@
                     } else {
                         authButton.classList.toggle('btn-danger');
                         authButton.classList.toggle('btn-primary');
+                        revokeAuthButton.hidden = false;
                         authSpinner.style.display = "none";
                         authStatus.textContent = 'Du bist nicht Teil des "Radio Ravnica" Discords';
                         rr_join = document.createElement('a');
