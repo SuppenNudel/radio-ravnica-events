@@ -176,9 +176,7 @@
 
         fee.addEventListener('blur', (event) => {
             const target = event.target;
-            console.log(target.value);
             var value = parseFloat(target.value);
-            console.log("parsed", value)
             if (isNaN(value)) {
                 target.value = "";
             } else {
@@ -326,7 +324,7 @@
             }
             const formattedStartDate = fp_date.formatDate(startDate, startDateFormat);
             const formattedEndDate = fp_date.formatDate(endDate, "d.m.y");
-            const formattedTime = fp_time.formatDate(timeValue, "h:i");
+            const formattedTime = fp_time.formatDate(timeValue, "H:i");
 
             const combinedDateTime = new Date(startDate);
 
