@@ -287,6 +287,7 @@
 
         sendButton.addEventListener('click', async function (event) {
             event.preventDefault(); // Prevent the form from submitting the traditional way
+            date.value = fp_date.selectedDates[0];
             const invalidElement = isFormValid();
             if (invalidElement) {
                 appendAlert(`Prüfe bitte deine Eingaben in "${invalidElement.textContent.replace('* ', '')}"`, 'info');
@@ -311,7 +312,7 @@
             var startDateFormat = '';
             if (endDate && startDate.getDate() != endDate.getDate()) {
                 if (endDate.getDay() != startDate.getDay()) {
-                    startDate += 'd.';
+                    startDateFormat += 'd.';
                 }
                 if (endDate.getMonth() != startDate.getMonth()) {
                     startDateFormat += 'm.';
