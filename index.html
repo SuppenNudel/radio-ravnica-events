@@ -57,7 +57,8 @@
                             Vor allem erhalten wir keinen Zugriff auf eure Zugangsdaten oder gar euer Passwort! Die
                             Anmeldung läuft nur gegen Discord selbst. Wir erhalten lediglich die Bestätigung über die
                             erfolgreiche Anmeldung einschließlich der oben genannten Informationen.
-                            Technische Details zum OAuth-Verfahren finden sich hier: <a href="https://discord.com/developers/docs/topics/oauth2">OAuth2</a>
+                            Technische Details zum OAuth-Verfahren finden sich hier: <a
+                                href="https://discord.com/developers/docs/topics/oauth2">OAuth2</a>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
@@ -190,7 +191,7 @@
             return urlParams.get(param);
         }
 
-        async function postDataAndFetchUser(webhookURL, jsonBody) {
+        async function sendEventPostRequest(webhookURL, jsonBody) {
             try {
                 const response = await fetch(webhookURL, {
                     method: "POST",
@@ -206,10 +207,10 @@
                     const messageUrl = `discord://discord.com/channels/${serverId}/${data.channel_id}/${data.id}`
                     appendAlert(`Event erfolgreich angekommen <a href='${messageUrl}'>Gehe zu Forum Post</a>`, 'success');
                 } else {
-                    var message = data.message;
-                    if(response.status == 404 && data.status == 'ZERO_RESULTS') {
-                       message =  'Ort konnte nicht gefunden werden';
-                    } else if(response.status == 429) {
+                    var message = data.message ? data.message : JSON.stringify(data);
+                    if (response.status == 404 && data.status == 'ZERO_RESULTS') {
+                        message = 'Ort konnte nicht gefunden werden';
+                    } else if (response.status == 429) {
                         message = `${data.message} Versuche es in ${data.retry_after} Sekunden nochmal.`;
                     }
                     appendAlert(`${response.status} - ${message}`, 'warning');
@@ -245,6 +246,48 @@
                 document.getElementById(fieldName).value = url.searchParams.get(fieldName);
             }
         }
+
+        function toLocalISOString(date) {
+            const year = date.getUTCFullYear();
+            const month = ('0' + (date.getUTCMonth() + 1)).slice(-2);
+            const day = ('0' + date.getUTCDate()).slice(-2);
+            const hours = ('0' + date.getUTCHours()).slice(-2);
+            const minutes = ('0' + date.getUTCMinutes()).slice(-2);
+            const seconds = ('0' + date.getUTCSeconds()).slice(-2);
+
+            const customISOString = `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
+            return customISOString;
+        }
+
+        function generateICS(event) {
+            const { start, end, title, description, location, uid, organizer } = event;
+            return `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTART:${start}
+DTEND:${end}
+SUMMARY:${title}
+DESCRIPTION:${description}
+LOCATION:${location}
+END:VEVENT
+END:VCALENDAR`;
+        }
+
+//         return `BEGIN:VCALENDAR
+// VERSION:2.0
+// BEGIN:VEVENT
+// UID:${uid}
+// DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+// ORGANIZER;CN=${organizer.name}:MAILTO:${organizer.email}
+// DTSTART:${start}
+// DTEND:${end}
+// SUMMARY:${title}
+// DESCRIPTION:${description}
+// LOCATION:${location}
+// END:VEVENT
+// END:VCALENDAR`;
+//         }
 
         initForm();
         // what tags are available? "applied_tags": [""]
@@ -334,10 +377,31 @@
             combinedDateTime.setMinutes(timeValue.getMinutes());
             const timestamp = Math.floor(combinedDateTime.getTime() / 1000);
 
+            const endDateTime = new Date(combinedDateTime);
+            if(startDate.getDate() == endDate.getDate() && startDate.getMonth() == endDate.getMonth() && startDate.getYear() == endDate.getYear()) {
+                endDateTime.setHours(endDateTime.getHours() + 3);
+            } else {
+                endDateTime.setDate(endDate.getDate());
+            }
+
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
             const formattedDateRange = `${formattedStartDate}${startDate.getDate() != endDate.getDate() ? ' bis ' + formattedEndDate : ''}`;
-            const title = `${formattedDateRange} - ${formatValue} - ${eventValue} @ ${storeValue} in ${cityValue}`;
+            const proposedTitle = `${formattedDateRange} - ${formatValue} - ${eventValue} @ ${storeValue} in ${cityValue}`;
+            const title = proposedTitle.length > 100 ? proposedTitle.substring(0, 97)+"..." : proposedTitle;
             const contentText = `Format(e): ${formatValue}\\nDatum: ${formattedDateRange}\\nUhrzeit: ${formattedTime}\\n${urlValue ? 'URL: ' + urlValue + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue + '\\n\\n' : ''}[${addressFieldValue ? addressFieldValue : storeValue + '\\n' + cityValue}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
+
+            const eventObject = {
+                start: toLocalISOString(combinedDateTime),
+                end: toLocalISOString(endDateTime),
+                title: `${formatValue} - ${eventValue} @ ${storeValue}`,
+                description: contentText,
+                location: address,
+                uid: '1234567890@example.com',
+                organizer: {
+                    name: 'Name',
+                    email: 'name@example.com'
+                }
+            };
 
             const jsonBody = JSON.stringify({
                 "content": contentText,
@@ -345,13 +409,14 @@
                 "access_token": access_token,
                 "address": address,
                 "url": urlValue,
-                "debug": debugValue
+                "debug": debugValue,
+                "ics": generateICS(eventObject)
             });
 
             const sendSpinner = document.getElementById('sendSpinner');
             const sendStatus = document.getElementById('sendStatus');
 
-            postDataAndFetchUser(webhookURL, jsonBody);
+            sendEventPostRequest(webhookURL, jsonBody);
 
             sendButton.disabled = true;
             sendSpinner.style.display = null;
