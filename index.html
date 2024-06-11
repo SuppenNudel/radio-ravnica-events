@@ -307,7 +307,7 @@
             const endDate = fp_date.selectedDates[1]; // == startDate ? null : fp_date.selectedDates[1];
             const timeValue = fp_time.selectedDates[0];
             const addressFieldValue = document.getElementById('address').value.replaceAll("\n", "\\n").trim();
-            const address = addressFieldValue ? addressFieldValue.replaceAll('\\n', ' ') : storeValue + " " + cityValue;
+            const address = addressFieldValue ? addressFieldValue.replaceAll('\\n', ', ') : storeValue + " " + cityValue;
 
             var startDateFormat = '';
             if (endDate && startDate.getDate() != endDate.getDate()) {
