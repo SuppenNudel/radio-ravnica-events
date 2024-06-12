@@ -388,13 +388,14 @@ END:VCALENDAR`;
             const formattedDateRange = `${formattedStartDate}${startDate.getDate() != endDate.getDate() ? ' bis ' + formattedEndDate : ''}`;
             const proposedTitle = `${formattedDateRange} - ${formatValue} - ${eventValue} @ ${storeValue} in ${cityValue}`;
             const title = proposedTitle.length > 100 ? proposedTitle.substring(0, 97)+"..." : proposedTitle;
+            const icsDescription = `Format(e): ${formatValue}\\n${urlValue ? urlValue + '\\n' : ''}${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue : ''}`;
             const contentText = `Format(e): ${formatValue}\\nDatum: ${formattedDateRange}\\nUhrzeit: ${formattedTime}\\n${urlValue ? 'URL: ' + urlValue + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue + '\\n\\n' : ''}[${addressFieldValue ? addressFieldValue : storeValue + '\\n' + cityValue}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
             const eventObject = {
                 start: toLocalISOString(combinedDateTime),
                 end: toLocalISOString(endDateTime),
-                title: `${formatValue} - ${eventValue} @ ${storeValue}`,
-                description: contentText,
+                title: `${eventValue} @ ${storeValue}`,
+                description: icsDescription,
                 location: address,
                 uid: '1234567890@example.com',
                 organizer: {
