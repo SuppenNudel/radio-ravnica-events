@@ -107,6 +107,16 @@
                             <input type="text" id="time" name="time" class="flatpickr form-control" required>
                             <label for="time" class="form-label">* Uhrzeit</label>
                         </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="multidayEventCheck">
+                            <label class="form-check-label" for="multidayEventCheck">
+                                Mehrtägiges Event
+                            </label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="text" id="enddate" name="enddate" class="flatpickr form-control enddate">
+                            <label for="enddate" class="form-label">Bis</label>
+                        </div>
                     </div>
                 </div>
                 <div class="rpw form-floating mb-3">
@@ -121,8 +131,8 @@
                 </div>
                 <div class="form-floating mb-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" disabled>
-                        <label class="form-check-label" for="flexCheckDefault">
+                        <input class="form-check-input" type="checkbox" value="" id="keepForm" disabled>
+                        <label class="form-check-label" for="keepForm">
                             Eingabefelder behalten (noch nicht implementiert)
                         </label>
                     </div>
@@ -160,12 +170,19 @@
         // https://flatpickr.js.org/examples/
         const fp_date = flatpickr("#date", {
             locale: "de",
-            mode: "range",
             weekNumbers: true,
             altInput: true,
             altFormat: "d.m.Y",
             dateFormat: "Y-m-d",
-            defaultDate: [defaultStartDate, defaultEndDate]
+            defaultDate: defaultStartDate
+        });
+        const fp_endDate = flatpickr("#enddate", {
+            locale: "de",
+            weekNumbers: true,
+            altInput: true,
+            altFormat: "d.m.Y",
+            dateFormat: "Y-m-d",
+            defaultDate: defaultEndDate
         });
         const fp_time = flatpickr("#time", {
             locale: "de",
@@ -182,6 +199,24 @@
                 target.value = "";
             } else {
                 target.value = value.toFixed(2);
+            }
+        });
+
+        multidayEventCheck.addEventListener('change', function () {
+            const enddateControls = document.querySelectorAll(".form-control.enddate");
+            if (multidayEventCheck.checked) {
+                enddateControls.forEach(function (element) {
+                    if(!sendButton.disabled) {
+                        element.disabled = false;
+                        element.required = true;
+                    }
+                });
+            } else {
+
+                enddateControls.forEach(function (element) {
+                    element.disabled = true;
+                    element.required = false;
+                });
             }
         });
 
@@ -274,20 +309,20 @@ END:VEVENT
 END:VCALENDAR`;
         }
 
-//         return `BEGIN:VCALENDAR
-// VERSION:2.0
-// BEGIN:VEVENT
-// UID:${uid}
-// DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
-// ORGANIZER;CN=${organizer.name}:MAILTO:${organizer.email}
-// DTSTART:${start}
-// DTEND:${end}
-// SUMMARY:${title}
-// DESCRIPTION:${description}
-// LOCATION:${location}
-// END:VEVENT
-// END:VCALENDAR`;
-//         }
+        //         return `BEGIN:VCALENDAR
+        // VERSION:2.0
+        // BEGIN:VEVENT
+        // UID:${uid}
+        // DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+        // ORGANIZER;CN=${organizer.name}:MAILTO:${organizer.email}
+        // DTSTART:${start}
+        // DTEND:${end}
+        // SUMMARY:${title}
+        // DESCRIPTION:${description}
+        // LOCATION:${location}
+        // END:VEVENT
+        // END:VCALENDAR`;
+        //         }
 
         initForm();
         // what tags are available? "applied_tags": [""]
@@ -347,7 +382,7 @@ END:VCALENDAR`;
             const freitextValue = document.getElementById('freitext').value.replaceAll("\n", "\\n").replaceAll("\"", "\\\"");
             const feeValue = document.getElementById('fee').value.trim();
             const startDate = fp_date.selectedDates[0];
-            const endDate = fp_date.selectedDates[1]; // == startDate ? null : fp_date.selectedDates[1];
+            const endDate = fp_endDate.selectedDates[0];
             const timeValue = fp_time.selectedDates[0];
             const addressFieldValue = document.getElementById('address').value.replaceAll("\n", "\\n").trim();
             const address = addressFieldValue ? addressFieldValue.replaceAll('\\n', ', ') : storeValue + " " + cityValue;
@@ -367,7 +402,10 @@ END:VCALENDAR`;
                 startDateFormat = 'd.m.y';
             }
             const formattedStartDate = fp_date.formatDate(startDate, startDateFormat);
-            const formattedEndDate = fp_date.formatDate(endDate, "d.m.y");
+            let formattedEndDate = null;
+            if(endDate) {
+                formattedEndDate = fp_date.formatDate(endDate, "d.m.y");
+            }
             const formattedTime = fp_time.formatDate(timeValue, "H:i");
 
             const combinedDateTime = new Date(startDate);
@@ -378,16 +416,18 @@ END:VCALENDAR`;
             const timestamp = Math.floor(combinedDateTime.getTime() / 1000);
 
             const endDateTime = new Date(combinedDateTime);
-            if(startDate.getDate() == endDate.getDate() && startDate.getMonth() == endDate.getMonth() && startDate.getYear() == endDate.getYear()) {
-                endDateTime.setHours(endDateTime.getHours() + 3);
-            } else {
-                endDateTime.setDate(endDate.getDate());
+            if(endDate) {
+                if (startDate.getDate() == endDate.getDate() && startDate.getMonth() == endDate.getMonth() && startDate.getYear() == endDate.getYear()) {
+                    endDateTime.setHours(endDateTime.getHours() + 3);
+                } else {
+                    endDateTime.setDate(endDate.getDate());
+                }
             }
 
             const webhookURL = 'https://hook.eu2.make.com/wpuj5equfmpjzbiatgddb5dezml7ncpe';
-            const formattedDateRange = `${formattedStartDate}${startDate.getDate() != endDate.getDate() ? ' bis ' + formattedEndDate : ''}`;
+            const formattedDateRange = `${formattedStartDate}${endDate ? ' bis ' + formattedEndDate : ''}`;
             const proposedTitle = `${formattedDateRange} - ${formatValue} - ${eventValue} @ ${storeValue} in ${cityValue}`;
-            const title = proposedTitle.length > 100 ? proposedTitle.substring(0, 97)+"..." : proposedTitle;
+            const title = proposedTitle.length > 100 ? proposedTitle.substring(0, 97) + "..." : proposedTitle;
             const icsDescription = `Format(e): ${formatValue}\\n${urlValue ? urlValue + '\\n' : ''}${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue : ''}`;
             const contentText = `Format(e): ${formatValue}\\nDatum: ${formattedDateRange}\\nUhrzeit: ${formattedTime}\\n${urlValue ? 'URL: ' + urlValue + '\\n' : ''}\\nDas Event beginnt <t:${timestamp}:R>\\n\\n${feeValue ? 'Startgebühr: ' + feeValue + ' €\\n\\n' : ''}${freitextValue ? freitextValue + '\\n\\n' : ''}[${addressFieldValue ? addressFieldValue : storeValue + '\\n' + cityValue}](https://www.google.com/maps?q=${encodeURI(address)})\\n\\n`;
 
@@ -472,7 +512,7 @@ END:VCALENDAR`;
 
                         authSpinner.style.display = "none";
 
-                        document.querySelectorAll('.form-control').forEach(el => {
+                        document.querySelectorAll('.form-control:not(.enddate)').forEach(el => {
                             el.disabled = false;
                         });
                     } else {
