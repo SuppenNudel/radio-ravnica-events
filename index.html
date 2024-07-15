@@ -344,7 +344,7 @@ END:VCALENDAR`;
             const formatValue = document.getElementById('format').value.trim();
             const cityValue = document.getElementById('city').value.trim();
             const urlValue = document.getElementById('url').value.trim();
-            const freitextValue = document.getElementById('freitext').value.replaceAll("\n", "\\n");
+            const freitextValue = document.getElementById('freitext').value.replaceAll("\n", "\\n").replaceAll("\"", "\\\"");
             const feeValue = document.getElementById('fee').value.trim();
             const startDate = fp_date.selectedDates[0];
             const endDate = fp_date.selectedDates[1]; // == startDate ? null : fp_date.selectedDates[1];
