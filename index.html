@@ -501,11 +501,11 @@ END:VCALENDAR`;
                         alert(`${data.message} Retry after: ${data.retry_after} seconds`);
                         return;
                     }
-                    if (data.nick) {
+                    if (data.user) {
                         authButton.classList.toggle('btn-success');
                         authButton.classList.toggle('btn-primary');
                         authButton.disabled = true;
-                        authStatus.textContent = `Authentifiziert über Discord als '${data.nick}'`;
+                        authStatus.textContent = `Authentifiziert über Discord als '${data.user.username}'`;
                         revokeAuthButton.hidden = false;
 
                         sendButton.disabled = false;
