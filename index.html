@@ -445,12 +445,22 @@ END:VCALENDAR`;
             };
 
             const jsonBody = JSON.stringify({
-                "content": contentText,
-                "thread_name": title,
                 "access_token": access_token,
-                "address": address,
-                "url": urlValue,
                 "debug": debugValue,
+
+                "event": eventValue,
+                "store_name": storeValue,
+                "city": cityValue,
+                "formats": formatValue,
+                "url": urlValue,
+                "fee": feeValue,
+                "startDate": fp_date.formatDate(startDate, "Y-m-d") + " " + formattedTime,
+                "endDate": endDate ? fp_date.formatDate(endDate, "Y-m-d") : "",
+                "address": address,
+                "freetext": freitextValue,
+
+                "thread_name": title,
+                "content": contentText,
                 "ics": generateICS(eventObject)
             });
 
