@@ -6,19 +6,39 @@
     <title>Seite umgezogen</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Custom Radio Ravnica Colors */
+        body {
+            background-color: #25584F; /* Teal Green */
+            color: #FFFFFF; /* White for contrast */
+        }
+        .radio-ravnica-bg {
+            background-color: #25584F; /* Teal Green */
+            color: #D5AD3E; /* Gold */
+            border: 3px solid #D5AD3E; /* Gold border for emphasis */
+        }
+        .radio-ravnica-btn {
+            background-color: #D5AD3E; /* Gold */
+            color: #25584F; /* Teal Green */
+            border: none;
+        }
+        .radio-ravnica-btn:hover {
+            background-color: #B09130; /* Darker Gold */
+            color: white; /* White text for contrast */
+        }
+    </style>
 </head>
-<body class="d-flex justify-content-center align-items-center vh-100 bg-light">
-    <div class="jumbotron text-center bg-primary text-white p-5 rounded shadow">
+<body class="d-flex justify-content-center align-items-center vh-100">
+    <div class="jumbotron text-center radio-ravnica-bg p-5 rounded shadow">
         <h1 class="display-4">Die Seite ist umgezogen</h1>
-        <p class="lead">Klicken Sie unten, um zur neuen Seite zu gelangen.</p>
-        <button class="btn btn-danger btn-lg" onclick="redirect()">Weiter zur neuen Seite</button>
+        <button class="btn radio-ravnica-btn btn-lg" onclick="redirect()">Zum neuen For</button>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function redirect() {
-            window.location.href = "https://nudelforce.notion.site/138f020626c280c7b99ccd60d32b7c1d?pvs=105"; // Replace with your desired URL
+            window.location.href = "https://nudelforce.notion.site/138f020626c280c7b99ccd60d32b7c1d"; // Replace with your desired URL
         }
     </script>
 </body>
